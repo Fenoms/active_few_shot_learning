@@ -8,15 +8,15 @@ tf.reset_default_graph()
 
 tf.logging.set_verbosity(tf.logging.INFO)
 # Experiment Setup
-batch_size = 10
+batch_size = 5
 ways = 5
 shots = 5
 query_size = 2
 image_shape = [224, 224, 3]
 restore = False
 # active_round = 6
-int_total_epochs = 8
-total_training_episodes = 500
+int_total_epochs = 10
+total_training_episodes = 250
 total_val_episodes = 250
 total_test_episodes = 250
 data_format = 'channels_last'
@@ -53,7 +53,7 @@ if not os.path.exists('summary_dir/test_log'):
     os.makedirs('summary_dir/test_log')
 
 tra_log_path = os.path.join(path, 'summary_dir/tra_log')
-test_log_path = os.path.join(path, 'summary/dir/test_log')
+test_log_path = os.path.join(path, 'summary_dir/test_log')
 
 
 # Experiment initialization and running
@@ -94,7 +94,7 @@ with tf.Session() as sess:
                 if total_val_accuracy >= best_val: #if new best val accuracy -> produce test statistics
                     best_val = total_val_accuracy
                     total_test_c_loss, total_test_accuracy = experiment.run_testing_epoch(
-                                                                        total_test_episodes=total_test_episodes, sess=sess)
+                                                                        total_test_episodes=total_test_episodes, sess=sess, writer = test_writer)
                     print('\n')
                     print("Epoch {}: test_loss: {}, test_accuracy: {}".format(e, total_test_c_loss, total_test_accuracy))
 
