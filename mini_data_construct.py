@@ -32,7 +32,7 @@ def find_five_candidates():
 
     selected_labels = sorted(img_number.items(), key=lambda x: x[1],  reverse=True)
 
-    for c in selected_labels[0:5]:
+    for c in selected_labels[3:8]:
         label = c[0]
         res.append(label)
 

@@ -38,7 +38,7 @@ class ExperimentBuilder:
         self.query_y = tf.placeholder(tf.uint8, shape = [batch_size, query_size*ways], name = 'query_labels')
         self.is_training = tf.placeholder(tf.bool, name='training_flag')
         self.dropout_prob = tf.placeholder(tf.float32, name='dropout_prob')
-        self.current_learning_rate = 0.001
+        self.current_learning_rate = 0.0001
         self.learning_rate = tf.placeholder(tf.float32, name='learning_rate')
         self.few_shot_miniImagenet = FewshotsNet(batch_size=batch_size, support_set_images=self.support_set_x,
                                                  support_set_labels=self.support_set_y,
@@ -49,6 +49,7 @@ class ExperimentBuilder:
         self.summary, self.losses, self.ada_opts = self.few_shot_miniImagenet.init_train()
         init = tf.global_variables_initializer()
         self.total_train_iter = 0
+        self.total_test_iter = 0
         return self.few_shot_miniImagenet, self.losses, self.ada_opts, init
 
     def run_training_epoch(self, total_training_episodes, writer, sess):
@@ -77,9 +78,9 @@ class ExperimentBuilder:
                 total_c_loss += c_loss_value
                 total_accuracy += acc
                 self.total_train_iter += 1
-                if self.total_train_iter % 100 == 0:
-                    writer.add_summary(summary, self.total_train_iter )
-                if self.total_train_iter % 1000 == 0:
+                if self.total_train_iter % 10 == 0:
+                    writer.add_summary(summary, self.total_train_iter)
+                if self.total_train_iter % 2000 == 0:
                     self.current_learning_rate /= 2
                     print("change learning rate", self.current_learning_rate)
 
@@ -118,7 +119,7 @@ class ExperimentBuilder:
 
         return total_val_c_loss, total_val_accuracy
 
-    def run_testing_epoch(self, total_test_episodes, sess):
+    def run_testing_epoch(self, total_test_episodes, sess, writer):
         """
         Runs one testing epoch
         :param total_test_batches: Number of batches to train on
@@ -130,8 +131,8 @@ class ExperimentBuilder:
         with tqdm.tqdm(total=total_test_episodes) as pbar:
             for i in range(total_test_episodes):
                 support_set_x, support_set_y, query_x, query_y = self.data.get_batch("test")
-                c_loss_value, acc = sess.run(
-                    [self.losses['loss'], self.losses['accuracy']],
+                c_loss_value, acc, summary = sess.run(
+                    [self.losses['loss'], self.losses['accuracy'], self.summary],
                     feed_dict={self.dropout_prob: 1.0, self.support_set_x: support_set_x,
                                self.support_set_y: support_set_y, self.query_x: query_x,
                                self.query_y: query_y,
@@ -139,7 +140,9 @@ class ExperimentBuilder:
 
                 tf.logging.info('train_loss:{}, accuracy:{}'.format(c_loss_value, acc))
                 pbar.update(1)
-
+                self.total_test_iter += 1
+                if self.total_test_iter % 10 == 0:
+                    writer.add_summary(summary, self.total_test_iter)
                 total_test_c_loss += c_loss_value
                 total_test_accuracy += acc
             total_test_c_loss = total_test_c_loss / total_test_episodes
