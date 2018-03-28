@@ -46,7 +46,7 @@ class ExperimentBuilder:
                                                  dropout_prob=self.dropout_prob,
                                                  is_training=self.is_training, learning_rate=self.learning_rate)
 
-        self.summary, self.losses, self.ada_opts = self.few_shot_miniImagenet.init_train()
+        losses, self.ada_opts = self.few_shot_miniImagenet.init_train()
         init = tf.global_variables_initializer()
         self.total_train_iter = 0
         self.total_test_iter = 0
@@ -59,14 +59,14 @@ class ExperimentBuilder:
         :param sess: Session object
         :return: mean_training_categorical_crossentropy_loss and mean_training_accuracy
         """
-        total_c_loss = 0.
-        total_accuracy = 0.
+        losses = []
+        accuracies = []
         with tqdm.tqdm(total=total_training_episodes) as pbar:
 
             for i in range(total_training_episodes):  # train epoch
                 support_set_x, support_set_y, query_x, query_y = self.data.get_batch('tra')
-                _, c_loss_value, acc, summary = sess.run(
-                    [self.ada_opts, self.losses['loss'], self.losses['accuracy'], self.summary],
+                _, c_loss_value, acc = sess.run(
+                    [self.ada_opts, self.losses['loss'], self.losses['accuracy']],
                     feed_dict={self.dropout_prob: 0.5, self.support_set_x: support_set_x,
                                self.support_set_y: support_set_y, self.query_x: query_x, self.query_y: query_y,
                                self.is_training: True, self.learning_rate: self.current_learning_rate})
@@ -75,18 +75,23 @@ class ExperimentBuilder:
                 tf.logging.info('train_loss:{}, accuracy:{}'.format(c_loss_value, acc))
 
                 pbar.update(1)
-                total_c_loss += c_loss_value
-                total_accuracy += acc
+                losses.append(c_loss_value)
+                accuracies.append(acc)
                 self.total_train_iter += 1
                 if self.total_train_iter % 100 == 0:
-                    writer.add_summary(summary, self.total_train_iter)
+                    loss_last_100 = np.mean(losses[-100:])
+                    accuracy_last_100 = np.mean(accuracies[-100:])
+                    train_summary = tf.Summary()
+                    train_summary.vaule.add(tag="loss", simple_value=loss_last_100)
+                    train_summary.vaule.add(tag='accuracy', simple_value=accuracy_last_100)
+                    writer.add_summary(train_summary, self.total_train_iter)
                 if self.total_train_iter % 2000 == 0:
                     self.current_learning_rate /= 2
                     print("change learning rate", self.current_learning_rate)
 
-        total_c_loss = total_c_loss / total_training_episodes
-        total_accuracy = total_accuracy / total_training_episodes
-        return total_c_loss, total_accuracy
+            average_loss = np.mean(losses)
+            average_accuracy = np.mean(accuracies)
+        return average_loss, average_accuracy
 
     def run_validation_epoch(self, total_val_episodes, sess):
         """
@@ -126,13 +131,13 @@ class ExperimentBuilder:
         :param sess: Session object
         :return: mean_testing_categorical_crossentropy_loss and mean_testing_accuracy
         """
-        total_test_c_loss = 0.
-        total_test_accuracy = 0.
+        losses = []
+        accuracies = []
         with tqdm.tqdm(total=total_test_episodes) as pbar:
             for i in range(total_test_episodes):
                 support_set_x, support_set_y, query_x, query_y = self.data.get_batch("test")
-                c_loss_value, acc, summary = sess.run(
-                    [self.losses['loss'], self.losses['accuracy'], self.summary],
+                c_loss_value, acc = sess.run(
+                    [self.losses['loss'], self.losses['accuracy']],
                     feed_dict={self.dropout_prob: 1.0, self.support_set_x: support_set_x,
                                self.support_set_y: support_set_y, self.query_x: query_x,
                                self.query_y: query_y,
@@ -141,13 +146,20 @@ class ExperimentBuilder:
                 tf.logging.info('train_loss:{}, accuracy:{}'.format(c_loss_value, acc))
                 pbar.update(1)
                 self.total_test_iter += 1
+                losses.append(c_loss_value)
+                accuracies.append(acc)
                 if self.total_test_iter % 50 == 0:
-                    writer.add_summary(summary, self.total_test_iter)
-                total_test_c_loss += c_loss_value
-                total_test_accuracy += acc
-            total_test_c_loss = total_test_c_loss / total_test_episodes
-            total_test_accuracy = total_test_accuracy / total_test_episodes
-        return total_test_c_loss, total_test_accuracy
+                    loss_last_50 = np.mean(losses[-50:])
+                    accuracy_last_50 = np.mean(accuracies[-50:])
+                    test_summary = tf.Summary()
+                    test_summary.vaule.add(tag="loss", simple_value=loss_last_50)
+                    test_summary.vaule.add(tag='accuracy', simple_value=accuracy_last_50)
+                    writer.add_summary(test_summary, self.total_train_iter)
+
+
+            average_loss = np.mean(losses)
+            average_accuracy = np.mean(accuracies)
+        return average_loss, average_accuracy
 
     def run_find_cand_epoch(self,sess):
         """

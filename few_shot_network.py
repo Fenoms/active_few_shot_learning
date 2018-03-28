@@ -423,7 +423,7 @@ class FewshotsNet:
 
             msq_losses = tf.reduce_mean(tf.pow(tf.cast(labels, tf.float32) - tf.cast(scores, tf.float32), 2))
             msq_losses = tf.identity(msq_losses, 'loss')
-            tf.summary.scalar('loss', msq_losses)
+            #tf.summary.scalar('loss', msq_losses)
 
             scores_1 = tf.reshape(scores_1, shape=[b, query_size, num_classes, num_samples_per_class])
 
@@ -440,7 +440,7 @@ class FewshotsNet:
             correct_prediction_ = tf.cast(tf.equal(correct_prediction, self.query_labels), tf.float32)
             accuracy = tf.reduce_mean(correct_prediction_)
             accuracy = tf.identity(accuracy, 'accuracy')
-            tf.summary.scalar('accuracy', accuracy)
+            #tf.summary.scalar('accuracy', accuracy)
 
             return {'loss': msq_losses, 'accuracy': accuracy}
 
@@ -467,5 +467,5 @@ class FewshotsNet:
         """
         losses = self.loss()
         ada_opt = self.train(losses)
-        summary = tf.summary.merge_all()
-        return summary, losses, ada_opt
+        #summary = tf.summary.merge_all()
+        return losses, ada_opt
