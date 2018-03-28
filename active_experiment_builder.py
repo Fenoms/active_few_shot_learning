@@ -78,7 +78,7 @@ class ExperimentBuilder:
                 total_c_loss += c_loss_value
                 total_accuracy += acc
                 self.total_train_iter += 1
-                if self.total_train_iter % 10 == 0:
+                if self.total_train_iter % 100 == 0:
                     writer.add_summary(summary, self.total_train_iter)
                 if self.total_train_iter % 2000 == 0:
                     self.current_learning_rate /= 2
@@ -141,7 +141,7 @@ class ExperimentBuilder:
                 tf.logging.info('train_loss:{}, accuracy:{}'.format(c_loss_value, acc))
                 pbar.update(1)
                 self.total_test_iter += 1
-                if self.total_test_iter % 10 == 0:
+                if self.total_test_iter % 50 == 0:
                     writer.add_summary(summary, self.total_test_iter)
                 total_test_c_loss += c_loss_value
                 total_test_accuracy += acc

@@ -65,7 +65,7 @@ def tra_data_augmentation():
     for folder in folders:
         print(folder)
         imgs = glob.glob(folder + '/*.png')
-        for i in range(3):
+        for i in range(4):
             for img in imgs:
                 print(img)
                 aug_img_name = img[:-4] + '_aug_' + str(i) + '.png'
