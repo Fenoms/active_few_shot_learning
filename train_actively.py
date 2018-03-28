@@ -8,15 +8,15 @@ tf.reset_default_graph()
 
 tf.logging.set_verbosity(tf.logging.INFO)
 # Experiment Setup
-batch_size = 5
+batch_size = 4
 ways = 5
-shots = 5
+shots = 10
 query_size = 2
 image_shape = [224, 224, 3]
 restore = False
 # active_round = 6
 int_total_epochs = 10
-total_training_episodes = 250
+total_training_episodes = 1000
 total_val_episodes = 250
 total_test_episodes = 250
 data_format = 'channels_last'
@@ -45,15 +45,15 @@ save_path = os.path.join(path, 'saved_models') # path for the checkpoint file
 if not os.path.exists('summary_dir'):
     os.makedirs('summary_dir')
 
-if not os.path.exists('summary_dir/tra_log'):
-    os.makedirs('summary_dir/tra_log')
+#if not os.path.exists('summary_dir/tra_log'):
+#    os.makedirs('summary_dir/tra_log')
 
 
-if not os.path.exists('summary_dir/test_log'):
-    os.makedirs('summary_dir/test_log')
+#if not os.path.exists('summary_dir/test_log'):
+#    os.makedirs('summary_dir/test_log')
 
-tra_log_path = os.path.join(path, 'summary_dir/tra_log')
-test_log_path = os.path.join(path, 'summary_dir/test_log')
+tra_log_path = os.path.join(path, 'summary_dir/tra_log_10_28')
+test_log_path = os.path.join(path, 'summary_dir/test_log_10_28')
 
 
 # Experiment initialization and running
