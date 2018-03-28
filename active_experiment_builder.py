@@ -3,6 +3,7 @@ import tqdm
 from few_shot_network import FewshotsNet
 import os
 import glob
+import numpy as np
 from collections import defaultdict
 
 path = os.getcwd()
@@ -46,7 +47,7 @@ class ExperimentBuilder:
                                                  dropout_prob=self.dropout_prob,
                                                  is_training=self.is_training, learning_rate=self.learning_rate)
 
-        losses, self.ada_opts = self.few_shot_miniImagenet.init_train()
+        self.losses, self.ada_opts = self.few_shot_miniImagenet.init_train()
         init = tf.global_variables_initializer()
         self.total_train_iter = 0
         self.total_test_iter = 0
@@ -82,8 +83,8 @@ class ExperimentBuilder:
                     loss_last_100 = np.mean(losses[-100:])
                     accuracy_last_100 = np.mean(accuracies[-100:])
                     train_summary = tf.Summary()
-                    train_summary.vaule.add(tag="loss", simple_value=loss_last_100)
-                    train_summary.vaule.add(tag='accuracy', simple_value=accuracy_last_100)
+                    train_summary.value.add(tag="loss", simple_value=loss_last_100)
+                    train_summary.value.add(tag='accuracy', simple_value=accuracy_last_100)
                     writer.add_summary(train_summary, self.total_train_iter)
                 if self.total_train_iter % 2000 == 0:
                     self.current_learning_rate /= 2
@@ -152,8 +153,8 @@ class ExperimentBuilder:
                     loss_last_50 = np.mean(losses[-50:])
                     accuracy_last_50 = np.mean(accuracies[-50:])
                     test_summary = tf.Summary()
-                    test_summary.vaule.add(tag="loss", simple_value=loss_last_50)
-                    test_summary.vaule.add(tag='accuracy', simple_value=accuracy_last_50)
+                    test_summary.value.add(tag="loss", simple_value=loss_last_50)
+                    test_summary.value.add(tag='accuracy', simple_value=accuracy_last_50)
                     writer.add_summary(test_summary, self.total_train_iter)
 
 

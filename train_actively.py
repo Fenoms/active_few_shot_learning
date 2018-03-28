@@ -79,8 +79,10 @@ with tf.Session() as sess:
         best_val = 0.
         total_epochs = int_total_epochs
         with tqdm.tqdm(total=total_epochs) as pbar_e:
-
+            
+            _,_ = experiment.run_testing_epoch(total_test_episodes=51, sess=sess, writer=test_writer)
             for e in range(0, total_epochs):
+                
                 total_c_loss, total_accuracy = experiment.run_training_epoch(total_training_episodes=total_training_episodes, writer = train_writer,
                                                                              sess=sess)
                 print('\n')
