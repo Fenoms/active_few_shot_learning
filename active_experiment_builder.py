@@ -51,6 +51,7 @@ class ExperimentBuilder:
         init = tf.global_variables_initializer()
         self.total_train_iter = 0
         self.total_test_iter = 0
+        self.total_val_iter = 0
         return self.few_shot_miniImagenet, self.losses, self.ada_opts, init
 
     def run_training_epoch(self, total_training_episodes, writer, sess):
@@ -94,15 +95,15 @@ class ExperimentBuilder:
             average_accuracy = np.mean(accuracies)
         return average_loss, average_accuracy
 
-    def run_validation_epoch(self, total_val_episodes, sess):
+    def run_validation_epoch(self, total_val_episodes,writer, sess):
         """
         Runs one validation epoch
         :param total_val_batches: Number of batches to train on
         :param sess: Session object
         :return: mean_validation_categorical_crossentropy_loss and mean_validation_accuracy
         """
-        total_val_c_loss = 0.
-        total_val_accuracy = 0.
+        losses = []
+        accuracies = []
 
         with tqdm.tqdm(total=total_val_episodes) as pbar:
             for i in range(total_val_episodes):  # validation epoch
@@ -116,14 +117,23 @@ class ExperimentBuilder:
 
                 tf.logging.info('train_loss:{}, accuracy:{}'.format(c_loss_value, acc))
                 pbar.update(1)
+                losses.append(c_loss_value)
+                accuracies.append(acc)
+                self.total_val_iter += 1
+                if self.total_val_iter % 100 == 0:
+                    loss_last_100 = np.mean(losses[-100:])
+                    accuracy_last_100 = np.mean(accuracies[-100:])
+                    val_summary = tf.Summary()
+                    val_summary.value.add(tag='loss', simple_value=loss_last_100)
+                    val_summary.value.add(tag='accuracy', simple_value=accuracy_last_100)
+                    writer.add_summary(val_summary, self.total_val_iter)
 
-                total_val_c_loss += c_loss_value
-                total_val_accuracy += acc
+       
+            average_loss = np.mean(losses)
+            average_accuracy = np.mean(accuracies)         
 
-        total_val_c_loss = total_val_c_loss / total_val_episodes
-        total_val_accuracy = total_val_accuracy / total_val_episodes
 
-        return total_val_c_loss, total_val_accuracy
+        return average_loss, average_accuracy
 
     def run_testing_epoch(self, total_test_episodes, sess, writer):
         """

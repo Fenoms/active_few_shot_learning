@@ -15,7 +15,7 @@ query_size = 2
 image_shape = [224, 224, 3]
 restore = False
 # active_round = 6
-int_total_epochs = 10
+int_total_epochs = 8
 total_training_episodes = 1000
 total_val_episodes = 250
 total_test_episodes = 250
@@ -52,14 +52,14 @@ if not os.path.exists('summary_dir'):
 #if not os.path.exists('summary_dir/test_log'):
 #    os.makedirs('summary_dir/test_log')
 
-tra_log_path = os.path.join(path, 'summary_dir/tra_log_10_28')
-test_log_path = os.path.join(path, 'summary_dir/test_log_10_28')
-
+tra_log_path = os.path.join(path, 'summary_dir/tra_log_10_30_1')
+test_log_path = os.path.join(path, 'summary_dir/test_log_10_30_1')
+val_log_path = os.path.join(path, 'summary_dir/val_log_10_30_1')
 
 # Experiment initialization and running
 with tf.Session() as sess:
     train_writer = tf.summary.FileWriter(tra_log_path, sess.graph)
-    # val_writer = tf.summary.FileWriter(summary_path + '/val')
+    val_writer = tf.summary.FileWriter(val_log_path, sess.graph)
     test_writer = tf.summary.FileWriter(test_log_path, sess.graph)
     if restore:
         try:
@@ -88,7 +88,7 @@ with tf.Session() as sess:
                 print('\n')
                 print("Epoch {}: train_loss: {}, train_accuracy: {}".format(e, total_c_loss, total_accuracy))
 
-                total_val_c_loss, total_val_accuracy = experiment.run_validation_epoch(total_val_episodes=total_val_episodes,
+                total_val_c_loss, total_val_accuracy = experiment.run_validation_epoch(total_val_episodes=total_val_episodes, writer = val_writer,
                                                                                        sess=sess)
                 print('\n')
                 print("Epoch {}: val_loss: {}, val_accuracy: {}".format(e, total_val_c_loss, total_val_accuracy))
